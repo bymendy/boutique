@@ -1,4 +1,10 @@
+<?php
+require_once('include/init.php');
 
+
+
+require_once('include/header.php');
+?>
 </div>
 
 <div class="container-fluid">
@@ -51,3 +57,4 @@
 
 <div class="container">
 
+<?php require_once('include/footer.php');?>

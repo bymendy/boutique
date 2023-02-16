@@ -1,4 +1,10 @@
+<?php
+require_once('include/init.php');
 
+
+
+require_once('include/header.php');
+?>
 
 <h2 class="text-center py-5"><div class="badge badge-dark text-wrap p-3">Connexion</div></h2>
 
@@ -27,3 +33,4 @@
    
 </form>
 
+<?php require_once('include/footer.php');?>

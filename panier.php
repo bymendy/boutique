@@ -1,4 +1,10 @@
+<?php
+require_once('include/init.php');
 
+
+
+require_once('include/header.php');
+?>
 <!-- $content .= '<div class="alert alert-danger" role="alert">La quantité du produit <strong>'  '</strong> a été diminuée. Vérifiez votre nouveau panier !</div>'; -->
 
 <!-- $content .= '<div class="alert alert-danger" role="alert">Le produit <strong>'  '</strong> a été retiré de votre panier car il est désormais en rupture de stock. Navré !</div>'; -->
@@ -156,3 +162,5 @@
 <!--Section: Block Content-->
 
 <!-- fin de panier -->
+
+<?php require_once('include/footer.php');?>

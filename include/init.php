@@ -2,7 +2,7 @@
 // dans ce fichier init, on va coder tout ce qui va nous servir sur l'intégralité des fichiers de notre boutique
 
 // connexion à la bdd
-$pdo = new PDO('mysql:host=localhost;dbname=boutique2', 'root', '', array(PDO::ATTR_ERRMODE => PDO::ERRMODE_WARNING, PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES UTF8') );
+$pdo = new PDO('mysql:host=localhost;dbname=boutique', 'root', '', array(PDO::ATTR_ERRMODE => PDO::ERRMODE_WARNING, PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES UTF8') );
 
 // le session_start obligatoire en haut de chaque fichier
 session_start();
@@ -34,4 +34,4 @@ foreach($_GET as $key => $value){
 }
 
 // inclusion de tout le code de ce fichier, pour le distribuer à toutes les pages du site, en une seule fois 
-require_once('fonctions.php')
+require_once('fonctions.php');
