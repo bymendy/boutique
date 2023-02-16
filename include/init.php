@@ -32,3 +32,6 @@ foreach($_POST as $key => $value){
 foreach($_GET as $key => $value){
     $_GET[$key] = htmlspecialchars(trim($value));
 }
+
+// inclusion de tout le code de ce fichier, pour le distribuer à toutes les pages du site, en une seule fois 
+require_once('fonctions.php')
