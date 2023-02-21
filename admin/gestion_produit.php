@@ -1,5 +1,16 @@
+<?php
+require_once('../include/init.php');
 
+if (!internauteConnecteAdmin()) {
+    header('location:' . URL . 'connexion.php');
+    exit();
+}
 
+$pdo = new PDO('mysql:host=localhost;dbname=boutique', 'root', '', array(PDO::ATTR_ERRMODE => PDO::ERRMODE_WARNING, PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES UTF8'));
+
+require_once('includeAdmin/header.php');
+
+?>
 <!-- $erreur .= '<div class="alert alert-danger" role="alert">Erreur format mot de passe !</div>'; -->
 
 <!-- $content .= '<div class="alert alert-success alert-dismissible fade show mt-5" role="alert">
@@ -18,6 +29,7 @@
         <span aria-hidden="true">&times;</span>
     </button>
 </div>
+
 
 
 <h2 class="pt-5">Formulaire  des produits</h2>
@@ -131,6 +143,30 @@
 
 <h2 class="py-5">Nombre de ... en base de données: </h2>
 
+<table class="table table-dark text-center">
+        <?php $afficheProduit = $pdo->query('SELECT * FROM produit'); ?>
+        <thead>
+            <tr>
+                <?php for($i = 0; $i < $afficheProduit->columnCount(); $i++ ):
+                    $colonne = $afficheProduit->getColumnMeta($i);?>
+                    <th><?= $colonne['name'] ?></th>
+                <?php endfor; ?>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            <?php while( $produit = $afficheProduit->fetch(PDO::FETCH_ASSOC)): ?>
+            <tr>
+
+                <?php foreach($produit as $key => $value): ?>
+                <td><?= $value ?></td>
+                <?php endforeach; ?>
+            </tr>
+            <?php endwhile; ?>
+        </tbody>
+</table>
+
 <div class="row justify-content-center py-5">
     <a href=''>
         <button type="button" class="btn btn-sm btn-outline-dark shadow rounded">
@@ -199,4 +235,4 @@
 </div> -->
 
 <!-- modal -->
-
+<?php require_once('includeAdmin/footer.php'); ?>
