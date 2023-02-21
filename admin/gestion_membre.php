@@ -8,14 +8,28 @@ if (!internauteConnecteAdmin()) {
 
 // au préalable, pour introduire le formulaire, je vérifie que j'ai reçu dans l'URL un indice action. Ca permettra de ne pas répéter plusieurs fois cette vérification dans tout le traitement du formulaire qui va suivre
 if (isset($_GET['action'])) {
+
     if ($_POST) {
 
         if (!isset($_POST['pseudo']) || !preg_match('#^[a-zA-Z0-9-_.]{3,20}$#', $_POST['pseudo'])) {
             $erreur .= '<div class="alert alert-danger" role="alert">Erreur format pseudo !</div>';
         }
 
-        if (!isset($_POST['mdp']) || strlen($_POST['mdp']) < 3 || strlen($_POST['mdp']) > 20) {
-            $erreur .= '<div class="alert alert-danger" role="alert">Erreur format mdp !</div>';
+        if ($_GET['action'] == 'add') {
+            $verifPseudo = $pdo->prepare("SELECT pseudo FROM membre WHERE pseudo = :pseudo ");
+            $verifPseudo->bindValue(':pseudo', $_POST['pseudo'], PDO::PARAM_STR);
+            $verifPseudo->execute();
+
+            if ($verifPseudo->rowCount() == 1) {
+
+                $erreur .= '<div class="alert alert-danger" role="alert">Erreur, ce pseudo existe déjà, vous devez en choisir un autre !</div>';
+            }
+
+            if (!isset($_POST['mdp']) || strlen($_POST['mdp']) < 3 || strlen($_POST['mdp']) > 20) {
+                $erreur .= '<div class="alert alert-danger" role="alert">Erreur format mdp !</div>';
+            }
+
+            $_POST['mdp'] = password_hash($_POST['mdp'], PASSWORD_DEFAULT);
         }
 
         if (!isset($_POST['nom']) || iconv_strlen($_POST['nom']) < 3 || iconv_strlen($_POST['nom']) > 20) {
@@ -46,22 +60,21 @@ if (isset($_GET['action'])) {
             $erreur .= '<div class="alert alert-danger" role="alert">Erreur format adresse !</div>';
         }
 
-        $verifPseudo = $pdo->prepare("SELECT pseudo FROM membre WHERE pseudo = :pseudo ");
-        $verifPseudo->bindValue(':pseudo', $_POST['pseudo'], PDO::PARAM_STR);
-        $verifPseudo->execute();
-
-        if ($verifPseudo->rowCount() == 1) {
-
-            $erreur .= '<div class="alert alert-danger" role="alert">Erreur, ce pseudo existe déjà, vous devez en choisir un autre !</div>';
-        }
-
-        $_POST['mdp'] = password_hash($_POST['mdp'], PASSWORD_DEFAULT);
-
         if (empty($erreur)) {
             // si dans l'URL action == update, on entame une procédure de modification
-            if($_GET['action'] == 'update'){
-
-            }else{
+            if ($_GET['action'] == 'update') {
+                $modifIuser = $pdo->prepare(" UPDATE membre SET id_membre = :id_membre , pseudo = :pseudo, nom = :nom, prenom = :prenom, email = :email, civilite = :civilite, ville = :ville, code_postal = :code_postal, adresse = :adresse WHERE id_membre = :id_membre ");
+                $modifIuser->bindValue(':id_membre', $_POST['id_membre'], PDO::PARAM_INT);
+                $modifIuser->bindValue(':pseudo', $_POST['pseudo'], PDO::PARAM_STR);
+                $modifIuser->bindValue(':nom', $_POST['nom'], PDO::PARAM_STR);
+                $modifIuser->bindValue(':prenom', $_POST['prenom'], PDO::PARAM_STR);
+                $modifIuser->bindValue(':email', $_POST['email'], PDO::PARAM_STR);
+                $modifIuser->bindValue(':civilite', $_POST['civilite'], PDO::PARAM_STR);
+                $modifIuser->bindValue(':ville', $_POST['ville'], PDO::PARAM_STR);
+                $modifIuser->bindValue(':code_postal', $_POST['code_postal'], PDO::PARAM_INT);
+                $modifIuser->bindValue(':adresse', $_POST['adresse'], PDO::PARAM_STR);
+                $modifIuser->execute();
+            } else {
                 // si on récupère autre chose que update (et donc add) on entame une procédure d'insertion en BDD
                 $inscrireUser = $pdo->prepare(" INSERT INTO membre (pseudo, mdp, nom, prenom, email, civilite, ville, code_postal, adresse) VALUES (:pseudo, :mdp, :nom, :prenom, :email, :civilite, :ville, :code_postal, :adresse) ");
                 $inscrireUser->bindValue(':pseudo', $_POST['pseudo'], PDO::PARAM_STR);
@@ -74,15 +87,41 @@ if (isset($_GET['action'])) {
                 $inscrireUser->bindValue(':code_postal', $_POST['code_postal'], PDO::PARAM_INT);
                 $inscrireUser->bindValue(':adresse', $_POST['adresse'], PDO::PARAM_STR);
                 $inscrireUser->execute();
+
+                $queryUser= $pdo->query(" SELECT pseudo FROM membre WHERE id_membre ='$_GET[is_membre]' ");
+                $user = $queryUser->fetch(PDO::FETCH_ASSOC);
+                $content .= '<div class="alert alert-success alert-dismissible fade show mt-5" role="alert">
+                        <strong>Félicitations !</strong> Modiffication de l\'utilisateur '. $user['pseudo'] .' reussie !
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>';
             }
+
         }
     }
-    // Procedure de recuperation des in infos en BDD pour les afficher dans le formulaire lorsque on fait un update(plus pratique et plus sur)
-    if($_GET['action'] == 'update'){
-        $tousUsers = $pdo->query("SELECT * FROM membre WHERE id_membre = '$_GET[id_membre']");
+
+    // procédure de récupération des infos en BDD pour les afficher dans le formulaire lorsque on fait un update (plus pratique et plus sur)
+    if ($_GET['action'] == 'update') {
+        $tousUsers = $pdo->query("SELECT * FROM membre WHERE id_membre = '$_GET[id_membre]' ");
         $userActuel = $tousUsers->fetch(PDO::FETCH_ASSOC);
-        $pseudo = (isset($userActuel['pseudo'])) ? $userActuel['pseudo'] : "";
     }
+
+    $id_membre = (isset($userActuel['id_membre'])) ? $userActuel['id_membre'] : "";
+    $pseudo = (isset($userActuel['pseudo'])) ? $userActuel['pseudo'] : "";
+    $email = (isset($userActuel['email'])) ? $userActuel['email'] : "";
+    $nom = (isset($userActuel['nom'])) ? $userActuel['nom'] : "";
+    $prenom = (isset($userActuel['prenom'])) ? $userActuel['prenom'] : "";
+    $civilite = (isset($userActuel['civilite'])) ? $userActuel['civilite'] : "";
+    $ville = (isset($userActuel['ville'])) ? $userActuel['ville'] : "";
+    $code_postal = (isset($userActuel['code_postal'])) ? $userActuel['code_postal'] : "";
+    $adresse = (isset($userActuel['adresse'])) ? $userActuel['adresse'] : "";
+    // syntaxe de condition classique équivalente à la ternaire juste au dessus
+    /*if(isset($userActuel['pseudo'])){
+            $pseudo = $userActuel['pseudo'];
+        }else{
+            $pseudo = "";
+        }*/
 }
 
 require_once('includeAdmin/header.php');
@@ -102,7 +141,7 @@ require_once('includeAdmin/header.php');
 </h1>
 
 <?= $erreur ?>
-
+<?= $content ?>
 <!-- <div class="blockquote alert alert-dismissible fade show mt-5 shadow border border-warning rounded" role="alert">
     <p>Gérez ici votre base de données des utilisateurs</p>
     <p>Vous pouvez modifier leurs données, ajouter ou supprimer un utilisateur</p>
@@ -118,33 +157,34 @@ require_once('includeAdmin/header.php');
 
     <form class="my-5" method="POST" action="">
 
-        <!-- input pour l'ID_membre, indispensable pour la requete de modification en BDD (on s'en fiche pour l'insertion en BDD). Sans, on ne pourra pas cibler dans la requete sql un user parmi les autres. Par contre, il doit  -->
-        <input type="hidden" name="id_membre" value="">
+        <!-- input pour l'id-membre, indispensable pour la requete de modification en BDD (on s'en fiche pour l'insertion en BDD). Sans, on ne pourra pas cibler dans la requete sql un user parmi les autre. Par contre, il doit etre de type hidden, caché, pour ne pas le modifier par maladresse -->
+        <input type="hidden" name="id_membre" value="<?= $id_membre ?>">
 
         <div class="row">
             <div class="col-md-4 mt-5">
                 <label class="form-label" for="pseudo">
                     <div class="badge badge-dark text-wrap">Pseudo</div>
                 </label>
-                <input class="form-control" type="text" name="pseudo" id="pseudo" placeholder="Pseudo">
+                <input class="form-control" type="text" name="pseudo" id="pseudo" placeholder="Pseudo" value="<?= $pseudo ?>">
             </div>
 
+            <!-- le champs mot de passe ne doit apparaitre que pour une insertion en BDD, pas pour une modif -->
+            <?php if ($_GET['action'] == "add") : ?>
 
+                <div class="col-md-4 mt-5">
+                    <label class="form-label" for="mdp">
+                        <div class="badge badge-dark text-wrap">Mot de passe</div>
+                    </label>
+                    <input class="form-control" type="password" name="mdp" id="mdp" placeholder="Mot de passe">
+                </div>
 
-            <div class="col-md-4 mt-5">
-                <label class="form-label" for="mdp">
-                    <div class="badge badge-dark text-wrap">Mot de passe</div>
-                </label>
-                <input class="form-control" type="password" name="mdp" id="mdp" placeholder="Mot de passe">
-            </div>
-
-
+            <?php endif; ?>
 
             <div class="col-md-4 mt-5">
                 <label class="form-label" for="email">
                     <div class="badge badge-dark text-wrap">Email</div>
                 </label>
-                <input class="form-control" type="email" name="email" id="email" placeholder="Email">
+                <input class="form-control" type="email" name="email" id="email" placeholder="Email" value="<?= $email ?>">
             </div>
         </div>
 
@@ -153,14 +193,14 @@ require_once('includeAdmin/header.php');
                 <label class="form-label" for="nom">
                     <div class="badge badge-dark text-wrap">Nom</div>
                 </label>
-                <input class="form-control" type="text" name="nom" id="nom" placeholder="Nom">
+                <input class="form-control" type="text" name="nom" id="nom" placeholder="Nom" value="<?= $nom ?>">
             </div>
 
             <div class="col-md-4 mt-5">
                 <label class="form-label" for="prenom">
                     <div class="badge badge-dark text-wrap">Prénom</div>
                 </label>
-                <input class="form-control" type="text" name="prenom" id="prenom" placeholder="Prénom">
+                <input class="form-control" type="text" name="prenom" id="prenom" placeholder="Prénom" value="<?= $prenom ?>">
             </div>
 
             <div class="col-md-4 mt-4">
@@ -168,10 +208,10 @@ require_once('includeAdmin/header.php');
                 <div class="badge badge-dark text-wrap">Civilité</div>
                 </p>
 
-                <input type="radio" name="civilite" id="civilite1" value="femme">
+                <input type="radio" name="civilite" id="civilite1" value="femme" <?= ($civilite == "femme") ? 'checked' : ""  ?>>
                 <label class="mx-2" for="civilite1">Femme</label>
 
-                <input type="radio" name="civilite" id="civilite2" value="homme">
+                <input type="radio" name="civilite" id="civilite2" value="homme" <?= ($civilite == "homme") ? 'checked' : ""  ?>>
                 <label class="mx-2" for="civilite2">Homme</label>
             </div>
         </div>
@@ -181,21 +221,21 @@ require_once('includeAdmin/header.php');
                 <label class="form-label" for="ville">
                     <div class="badge badge-dark text-wrap">Ville</div>
                 </label>
-                <input class="form-control" type="text" name="ville" id="ville" placeholder="Ville">
+                <input class="form-control" type="text" name="ville" id="ville" placeholder="Ville" value="<?= $ville ?>">
             </div>
 
             <div class="col-md-4 mt-5">
                 <label class="form-label" for="code_postal">
                     <div class="badge badge-dark text-wrap">Code Postal</div>
                 </label>
-                <input class="form-control" type="text" name="code_postal" id="code_postal" placeholder="Code postal">
+                <input class="form-control" type="text" name="code_postal" id="code_postal" placeholder="Code postal" value="<?= $code_postal ?>">
             </div>
 
             <div class="col-md-4 mt-5">
                 <label class="form-label" for="adresse">
                     <div class="badge badge-dark text-wrap">Adresse</div>
                 </label>
-                <input class="form-control" type="text" name="adresse" id="adresse" placeholder="Adresse">
+                <input class="form-control" type="text" name="adresse" id="adresse" placeholder="Adresse" value="<?= $adresse ?>">
             </div>
         </div>
 
