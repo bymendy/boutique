@@ -1,3 +1,17 @@
+<?php
+require_once('../include/init.php');
+
+if (!internauteConnecteAdmin()) {
+    header('location:' . URL . 'connexion.php');
+    exit();
+}
+
+$pdo = new PDO('mysql:host=localhost;dbname=boutique', 'root', '', array(PDO::ATTR_ERRMODE => PDO::ERRMODE_WARNING, PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES UTF8'));
+
+require_once('includeAdmin/header.php');
+
+?>
+
 <!-- $erreur .= '<div class="alert alert-danger" role="alert">Erreur format id membre !</div>'; -->
 
 <!-- $content .= '<div class="alert alert-success alert-dismissible fade show mt-5" role="alert">
@@ -50,27 +64,51 @@
     </div>
 
 </form>
-<h2 class="py-5">Nombre de ... en base de données: </h2>
 
-<!-- <div class="row justify-content-center py-5">
+
+<h2 class="py-5">Nombre de commandes en base de données: </h2>
+
+
+<!-- Bouton ajouter une commande -->
+<div class="row justify-content-center py-5">
     <a href="?action=add">
         <button type="button" class="btn btn-sm btn-outline-dark btn-warning text-dark">
             <i class="bi bi-plus-circle-fill text-dark"></i> Ajouter une commande
         </button>
     </a>
-</div> -->
+</div>
 
 <table class="table table-dark text-center">
-    <thead>
-        <tr>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td></td>
-        </tr>
-    </tbody>
+        <?php $afficheCommande = $pdo->query('SELECT * FROM commande'); 
+        $formSoumis = false;
+        if (isset($_POST["add"]) || isset($_POST["add"])) {
+            // Code pour ajouter ou modifier une commande
+            $formSoumis = true;
+        ?>
+        <thead>
+            <tr>
+                <?php for($i = 0; $i < $afficheCommande->columnCount(); $i++ ):
+                    $colonne = $afficheCommande->getColumnMeta($i);?>
+                    <th><?= $colonne['name'] ?></th>
+                <?php endfor; ?>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            <?php while( $commande = $afficheCommande->fetch(PDO::FETCH_ASSOC)): ?>
+            <tr>
+                <?php foreach($commande as $key => $value): ?>
+                <td><?= $value ?></td>
+                <?php endforeach; ?>
+            </tr>
+            <?php endwhile; ?>
+        </tbody>
+        <?php
+        } else {
+            $formSoumis = "";
+        }
+?>
 </table>
 
 <nav>
@@ -140,4 +178,4 @@
   </div>
 </div>
 <!-- modal -->
-
+<?php require_once('includeAdmin/footer.php'); ?>

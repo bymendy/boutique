@@ -1,3 +1,17 @@
+<?php
+require_once('../include/init.php');
+
+if (!internauteConnecteAdmin()) {
+    header('location:' . URL . 'connexion.php');
+    exit();
+}
+
+$pdo = new PDO('mysql:host=localhost;dbname=boutique', 'root', '', array(PDO::ATTR_ERRMODE => PDO::ERRMODE_WARNING, PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES UTF8'));
+
+require_once('includeAdmin/header.php');
+
+?>
+
 <!-- $erreur .= '<div class="alert alert-danger" role="alert">Erreur format id membre !</div>'; -->
 
 <!-- $content .= '<div class="alert alert-success alert-dismissible fade show mt-5" role="alert">
@@ -58,16 +72,30 @@
 </div>
 
 <table class="table table-dark text-center">
-    <thead>
-        <tr>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td></td>
-        </tr>
-    </tbody>
+        <?php $afficheDetailsCommande = $pdo->query('SELECT * FROM details_commande'); 
+        // if (isset($_GET['add']) && ($_GET['add'] == 'ajouter' || $_GET['add'] == 'modifier')) {
+        //     $afficheCommande = true;
+        ?>
+        <thead>
+            <tr>
+                <?php for($i = 0; $i < $afficheDetailsCommande->columnCount(); $i++ ):
+                    $colonne = $afficheDetailsCommande->getColumnMeta($i);?>
+                    <th><?= $colonne['name'] ?></th>
+                <?php endfor; ?>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            <?php while( $DetailsCommande = $afficheDetailsCommande->fetch(PDO::FETCH_ASSOC)): ?>
+            <tr>
+                <?php foreach($DetailsCommande as $key => $value): ?>
+                <td><?= $value ?></td>
+                <?php endforeach; ?>
+            </tr>
+            <?php endwhile; ?>
+        </tbody>
+
 </table>
 
 <nav>
@@ -137,3 +165,4 @@
   </div>
 </div>
 <!-- modal -->
+<?php require_once('includeAdmin/footer.php'); ?>
