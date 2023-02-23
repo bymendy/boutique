@@ -16,72 +16,126 @@ if (!internauteConnecteAdmin()) {
     exit();
 }
 
-
+// ************ CONTRAINTE ************
+// 1ére contrainte
 if (isset($_GET['action'])) {
-
+// tous ce qui va concernée l'envoie en base de donnée
     if ($_POST) {
-
-        if (!isset($_POST['reference']) || !preg_match('#^[a-zA-Z0-9-_.]{3,20}$#', $_POST['reference'])) {
+// Les contraintes pour chaque champs
+        if (!isset($_POST['reference']) || !preg_match('#^[a-zA-Z0-9-_.]{4,20}$#', $_POST['reference'])) {
             $erreur .= '<div class="alert alert-danger" role="alert"> La référence ne peut pas être vide !</div>';
         }
-
         if (!isset($_POST['categorie']) || iconv_strlen($_POST['categorie']) < 3 || iconv_strlen($_POST['categorie']) > 20) {
             $erreur .= '<div class="alert alert-danger" role="alert">Erreur format nom !</div>';
         }
-
-
+        if (!isset($_POST['titre']) || iconv_strlen($_POST['titre']) < 3 || iconv_strlen($_POST['titre']) > 20) {
+            $erreur .= '<div class="alert alert-danger" role="alert">Erreur format nom !</div>';
+        }
+        if (!isset($_POST['description']) || iconv_strlen($_POST['description']) < 3 || iconv_strlen($_POST['description']) > 50) {
+            $erreur .= '<div class="alert alert-danger" role="alert">Erreur format nom !</div>';
+        }
+        // Syntaxe pour la contrainte radio, selecteurs et checkbox
+        if (!isset($_POST['couleur']) || $_POST['couleur'] != 'bleu' && $_POST['couleur'] != 'rouge' && $_POST['couleur'] != 'vert' && $_POST['couleur'] != 'jaune' && $_POST['couleur'] != 'blanc' && $_POST['couleur'] != 'noir' && $_POST['couleur'] != 'marron') {
+            $erreur .= '<div class="alert alert-danger" role="alert">Erreur format couleur !</div>';
+        }        
+        
+        if (!isset($_POST['taille']) || $_POST['taille'] != 'small' && $_POST['taille'] != 'medium' && $_POST['taille'] != 'large' && $_POST['taille'] != 'xlarge') {
+            $erreur .= '<div class="alert alert-danger" role="alert">Erreur format Taille !</div>';
+        }
+        if (!isset($_POST['public']) || $_POST['public'] != 'enfant' && $_POST['public'] != 'femme' && $_POST['public'] != 'homme' && $_POST['public'] != 'mixte') {
+            $erreur .= '<div class="alert alert-danger" role="alert">Erreur format Public !</div>';
+        }        
+        if (!isset($_POST['prix']) || !preg_match('#^[a-zA-Z0-9-_.]{1,5}$#', $_POST['prix'])) {
+            $erreur .= '<div class="alert alert-danger" role="alert"> Le prix ne peut être vide !</div>';
+        }
+        if (!isset($_POST['stock']) || !preg_match('#^[a-zA-Z0-9-_.]{1,5}$#', $_POST['stock'])) {
+            $erreur .= '<div class="alert alert-danger" role="alert"> Le stock ne peut être vide !</div>';
+        }   
+        // ***  Traitement pour la photo
+        // Initialisation de la photo
+        $photo_bdd ="";
+        // condition pour modifier une photo 
+        if($_GET['action']== 'update'){
+            $photo_bdd= $_POST['photoActuelle'];
+        }
+        if(!empty($_FILES['photo']['name'])){
+            // je donne un nom à la photoque je vais ajouter en concaténant le nom de la référence du produit, avec le nom du fichier photo d'origine (les deux étant séparés d'un underscore (_))
+            $photo_nom = $_POST['reference'] . '_' . $_FILES['photo']['name'];
+            // utilisation de la variable photo_bdd pour lui affecter la valeur de photo_nom, sous forme de chaine de caractéres (pour les bindValue)
+            $photo_bdd= "$photo_nom";
+            // declaration de la variable qui va enregistrer le chemin ou uploader notre fichier (les photos vont aller dans le dossier img de notre projet, en localcomme en ligne lorsque le site sera héberger)
+            $photo_dossier = RACINE_SITE . "img/$photo_nom";
+            copy($_FILES['photo']['tmp_name'], $photo_dossier);
+        }
+        // *** Fin traitement photo
+        // Condition si la personne à bien renseigner les champs et ne s'est pas tromper
         if (empty($erreur)) {
             // si dans l'URL action == update, on entame une procédure de modification
             if ($_GET['action'] == 'update') {
-                $modifIuser = $pdo->prepare(" UPDATE membre SET id_membre = :id_membre , pseudo = :pseudo, nom = :nom, prenom = :prenom, email = :email, civilite = :civilite, ville = :ville, code_postal = :code_postal, adresse = :adresse WHERE id_membre = :id_membre ");
-                $modifIuser->bindValue(':id_membre', $_POST['id_membre'], PDO::PARAM_INT);
-                $modifIuser->bindValue(':pseudo', $_POST['pseudo'], PDO::PARAM_STR);
-                $modifIuser->bindValue(':nom', $_POST['nom'], PDO::PARAM_STR);
-                $modifIuser->bindValue(':prenom', $_POST['prenom'], PDO::PARAM_STR);
-                $modifIuser->bindValue(':email', $_POST['email'], PDO::PARAM_STR);
-                $modifIuser->bindValue(':civilite', $_POST['civilite'], PDO::PARAM_STR);
-                $modifIuser->bindValue(':ville', $_POST['ville'], PDO::PARAM_STR);
-                $modifIuser->bindValue(':code_postal', $_POST['code_postal'], PDO::PARAM_INT);
-                $modifIuser->bindValue(':adresse', $_POST['adresse'], PDO::PARAM_STR);
-                $modifIuser->execute();
+                $modifProduit = $pdo->prepare(" UPDATE produit SET id_produit = :id_produit , reference = :reference, categorie = :categorie, titre = :titre, description = :description, couleur = :couleur, taille = :taille, public = :public, photo = :photo, prix = :prix, stock = :stock WHERE id_produit = :id_produit ");
+                $modifProduit->bindValue(':id_produit', $_POST['id_produit'], PDO::PARAM_INT);
+                $modifProduit->bindValue(':reference', $_POST['reference'], PDO::PARAM_STR);
+                $modifProduit->bindValue(':categorie', $_POST['categorie'], PDO::PARAM_STR);
+                $modifProduit->bindValue(':titre', $_POST['titre'], PDO::PARAM_STR);
+                $modifProduit->bindValue(':description', $_POST['description'], PDO::PARAM_STR);
+                $modifProduit->bindValue(':couleur', $_POST['couleur'], PDO::PARAM_STR);
+                $modifProduit->bindValue(':taille', $_POST['taille'], PDO::PARAM_STR);
+                $modifProduit->bindValue(':public', $_POST['public'], PDO::PARAM_STR);
+                // $modifProduit->bindValue(':photo', $_POST['photo'], PDO::PARAM_STR);
+                $modifProduit->bindValue(':prix', $_POST['prix'], PDO::PARAM_INT);
+                $modifProduit->bindValue(':stock', $_POST['stock'], PDO::PARAM_INT);
+                $modifProduit->execute();
+                // Requete pour afficher un message personnaliser lorsque la modification à bien été réussie
+                $queryProduit = $pdo->query(" SELECT titre FROM produit WHERE id_produit = '$_GET[id_produit]' ");
+                // le query permet de cibler un élément tandis que le fetch permet de récupérer la cible
+                $produit = $queryProduit->fetch(PDO::FETCH_ASSOC);
+
+                $content .= '<div class="alert alert-success alert-dismissible fade show mt-5" role="alert">
+                        <strong>Félicitations !</strong> Modification du produit '. $produit['titre'] .' réussie !
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>';
             } else {
                 // si on récupère autre chose que update (et donc add) on entame une procédure d'insertion en BDD
-                $inscrireUser = $pdo->prepare(" INSERT INTO membre (pseudo, mdp, nom, prenom, email, civilite, ville, code_postal, adresse) VALUES (:pseudo, :mdp, :nom, :prenom, :email, :civilite, :ville, :code_postal, :adresse) ");
-                $inscrireUser->bindValue(':pseudo', $_POST['pseudo'], PDO::PARAM_STR);
-                $inscrireUser->bindValue(':mdp', $_POST['mdp'], PDO::PARAM_STR);
-                $inscrireUser->bindValue(':nom', $_POST['nom'], PDO::PARAM_STR);
-                $inscrireUser->bindValue(':prenom', $_POST['prenom'], PDO::PARAM_STR);
-                $inscrireUser->bindValue(':email', $_POST['email'], PDO::PARAM_STR);
-                $inscrireUser->bindValue(':civilite', $_POST['civilite'], PDO::PARAM_STR);
-                $inscrireUser->bindValue(':ville', $_POST['ville'], PDO::PARAM_STR);
-                $inscrireUser->bindValue(':code_postal', $_POST['code_postal'], PDO::PARAM_INT);
-                $inscrireUser->bindValue(':adresse', $_POST['adresse'], PDO::PARAM_STR);
-                $inscrireUser->execute();
+                $inscrireProduit = $pdo->prepare(" INSERT INTO produit (reference, categorie, titre, description, couleur, taille, public, photo, prix, stock) VALUES (:reference, :categorie, :titre, :description, :couleur, :taille, :public, :photo, :prix, :stock) ");
+                $inscrireProduit->bindValue(':reference', $_POST['reference'], PDO::PARAM_STR);
+                $inscrireProduit->bindValue(':categorie', $_POST['categorie'], PDO::PARAM_STR);
+                $inscrireProduit->bindValue(':titre', $_POST['titre'], PDO::PARAM_STR);
+                $inscrireProduit->bindValue(':description', $_POST['description'], PDO::PARAM_STR);
+                $inscrireProduit->bindValue(':couleur', $_POST['couleur'], PDO::PARAM_STR);
+                $inscrireProduit->bindValue(':taille', $_POST['taille'], PDO::PARAM_STR);
+                $inscrireProduit->bindValue(':public', $_POST['public'], PDO::PARAM_STR);
+                $inscrireProduit->bindValue(':photo', $photo_bdd, PDO::PARAM_STR);
+                $inscrireProduit->bindValue(':prix', $_POST['prix'], PDO::PARAM_INT);
+                $inscrireProduit->bindValue(':stock', $_POST['stock'], PDO::PARAM_INT);
+                $inscrireProduit->execute();
             }
         }
     }
 
     // procédure de récupération des infos en BDD pour les afficher dans le formulaire lorsque on fait un update (plus pratique et plus sur)
     if ($_GET['action'] == 'update') {
-        $tousUsers = $pdo->query("SELECT * FROM membre WHERE id_membre = '$_GET[id_membre]' ");
-        $userActuel = $tousUsers->fetch(PDO::FETCH_ASSOC);
+        $tousProduit = $pdo->query("SELECT * FROM produit WHERE id_produit = '$_GET[id_produit]' ");
+        $produitActuel = $tousProduit->fetch(PDO::FETCH_ASSOC);
     }
 
-    $id_membre = (isset($userActuel['id_membre'])) ? $userActuel['id_membre'] : "";
-    $pseudo = (isset($userActuel['pseudo'])) ? $userActuel['pseudo'] : "";
-    $email = (isset($userActuel['email'])) ? $userActuel['email'] : "";
-    $nom = (isset($userActuel['nom'])) ? $userActuel['nom'] : "";
-    $prenom = (isset($userActuel['prenom'])) ? $userActuel['prenom'] : "";
-    $civilite = (isset($userActuel['civilite'])) ? $userActuel['civilite'] : "";
-    $ville = (isset($userActuel['ville'])) ? $userActuel['ville'] : "";
-    $code_postal = (isset($userActuel['code_postal'])) ? $userActuel['code_postal'] : "";
-    $adresse = (isset($userActuel['adresse'])) ? $userActuel['adresse'] : "";
-    // syntaxe de condition classique équivalente à la ternaire juste au dessus
-    /*if(isset($userActuel['pseudo'])){
-            $pseudo = $userActuel['pseudo'];
-        }else{
-            $pseudo = "";
-        }*/
+    $id_produit = (isset($produitActuel['id_produit'])) ? $produitActuel['id_produit'] : "";
+    $reference = (isset($produitActuel['reference'])) ? $produitActuel['reference'] : "";
+    $categorie = (isset($produitActuel['categorie'])) ? $produitActuel['categorie'] : "";
+    $titre = (isset($produitActuel['titre'])) ? $produitActuel['titre'] : "";
+    $description = (isset($produitActuel['description'])) ? $produitActuel['description'] : "";
+    $couleur = (isset($produitActuel['couleur'])) ? $produitActuel['couleur'] : "";
+    $taille = (isset($produitActuel['taille'])) ? $produitActuel['taille'] : "";
+    $public = (isset($produitActuel['public'])) ? $produitActuel['public'] : "";
+    $photo = (isset($produitActuel['photo'])) ? $produitActuel['photo'] : "";
+    $prix = (isset($produitActuel['prix'])) ? $produitActuel['prix'] : "";
+    $stock = (isset($produitActuel['stock'])) ? $produitActuel['stock'] : "";
+
+    // Requete pour effectuer une Supression
+    if($_GET['action'] == 'delete'){
+        $pdo->query(" DELETE FROM produit WHERE id_produit = '$_GET[id_produit]' ");
+    }
 }
 require_once('includeAdmin/header.php');
 ?>
@@ -99,6 +153,11 @@ require_once('includeAdmin/header.php');
     <div class="badge badge-warning text-wrap p-3">Gestion des produits</div>
 </h1>
 
+<?= $erreur ?>
+<?= $content ?>
+<!-- Utilisation de la fonction personnalisée debug pour savoir ce qui a été récupéré avec $_POST, pour comprendre en cas de probléme, ou est que cela se situe -->
+<!-- <?= debug($_POST) ?> -->
+
 <?php if (isset($_GET['action']) || isset($_GET['page'])) : ?>
 <div class="blockquote alert alert-dismissible fade show mt-5 shadow border border-warning rounded" role="alert">
     <p>Gérez ici votre base de données des produits</p>
@@ -114,29 +173,29 @@ require_once('includeAdmin/header.php');
 
 <!-- l'attribut enctype de la balise form permet l'envoi d'un fichier en upload, il est obligatoire, sinon on ne pourra envoyer le fichier image correspondant au produit -->
 <form id="monForm" class="my-5" method="POST" action="" enctype="multipart/form-data">
-
-
+    <!-- Important d'incorporer l'id_produit et de le cacher avec hidden  -->
+    <input type="hidden" name="id_produit" value="<?= $id_produit ?>">
 
     <div class="row mt-5">
         <div class="col-md-4">
             <label class="form-label" for="reference">
                 <div class="badge badge-dark text-wrap">Référence</div>
             </label>
-            <input class="form-control" type="text" name="reference" id="reference" placeholder="Référence">
+            <input class="form-control" type="text" name="reference" id="reference" placeholder="Référence" value="<?= $reference ?>" >
         </div>
 
         <div class="col-md-4">
             <label class="form-label" for="categorie">
                 <div class="badge badge-dark text-wrap">Catégorie</div>
             </label>
-            <input class="form-control" type="text" name="categorie" id="categorie" placeholder="Catégorie">
+            <input class="form-control" type="text" name="categorie" id="categorie" placeholder="Catégorie" value="<?= $categorie ?>">
         </div>
 
         <div class="col-md-4">
             <label class="form-label" for="titre">
                 <div class="badge badge-dark text-wrap">Titre</div>
             </label>
-            <input class="form-control" type="text" name="titre" id="titre" placeholder="Titre">
+            <input class="form-control" type="text" name="titre" id="titre" placeholder="Titre" value="<?= $titre ?>">
         </div>
     </div>
 
@@ -145,41 +204,43 @@ require_once('includeAdmin/header.php');
             <label class="form-label" for="description">
                 <div class="badge badge-dark text-wrap">Description</div>
             </label>
-            <textarea class="form-control" name="description" id="description" placeholder="Description" rows="5"></textarea>
+            <!-- Cas particulier pour le textarea mettre la value entre l'ouvrante et la fermante  -->
+            <textarea class="form-control" name="description" id="description" placeholder="Description" rows="5" ><?= $description ?>"</textarea>
         </div>
     </div>
 
     <div class="row mt-5">
 
+
         <div class="col-md-4 mt-3">
             <label class="badge badge-dark text-wrap" for="couleur">Couleur</label>
             <select class="form-control" name="couleur" id="couleur">
                 <option value="">Choisissez</option>
-                <option class="bg-primary text-light" value="bleu">Bleu</option>
-                <option class="bg-danger text-light" value="rouge">Rouge</option>
-                <option class="bg-success text-light" value="vert">Vert</option>
-                <option class="bg-warning text-light" value="jaune">Jaune</option>
-                <option class="bg-light text-dark" value="blanc">Blanc</option>
-                <option class="bg-dark text-light" value="noir">Noir</option>
-                <option class="text-light" style="background:brown;" value="marron">Marron</option>
+                <option class="bg-primary text-light" value="bleu" <?= ($couleur == 'bleu') ? 'selected' : '' ?>>Bleu</option>
+                <option class="bg-danger text-light" value="rouge" <?= ($couleur == 'rouge') ? 'selected' : '' ?>>Rouge</option>
+                <option class="bg-success text-light" value="vert" <?= ($couleur == 'vert') ? 'selected' : '' ?>>Vert</option>
+                <option class="bg-warning text-light" value="jaune" <?= ($couleur == 'jaune') ? 'selected' : '' ?>>Jaune</option>
+                <option class="bg-light text-dark" value="blanc" <?= ($couleur == 'blanc') ? 'selected' : '' ?>>Blanc</option>
+                <option class="bg-dark text-light" value="noir" <?= ($couleur == 'noir') ? 'selected' : '' ?>>Noir</option>
+                <option class="text-light" style="background:brown;" value="marron" <?= ($couleur == 'noir') ? 'selected' : '' ?>>Marron</option>
             </select>
         </div>
-
+        <!--  -->
         <div class="col-md-4">
             <p>
             <div class="badge badge-dark text-wrap">Taille</div>
             </p>
 
-            <input type="radio" name="taille" id="taille1" value="small">
+            <input type="radio" name="taille" id="taille1" value="small" <?= ($taille == 'small') ? 'checked' : '' ?>>
             <label class="mx-1" for="taille1">Small</label>
 
-            <input type="radio" name="taille" id="taille2" value="medium">
+            <input type="radio" name="taille" id="taille2" value="medium" <?= ($taille == 'medium') ? 'checked' : '' ?>>
             <label class="mx-1" for="public2">Medium</label>
 
-            <input type="radio" name="taille" id="taille3" value="large">
+            <input type="radio" name="taille" id="taille3" value="large" <?= ($taille == 'large') ? 'checked' : '' ?>>
             <label class="mx-1" for="taille3">Large</label>
 
-            <input type="radio" name="taille" id="taille4" value="xlarge">
+            <input type="radio" name="taille" id="taille4" value="xlarge" <?= ($taille == 'xlarge') ? 'checked' : '' ?>>
             <label class="mx-1" for="taille4">XLarge</label>
         </div>
 
@@ -188,19 +249,20 @@ require_once('includeAdmin/header.php');
             <div class="badge badge-dark text-wrap">Public</div>
             </p>
 
-            <input type="radio" name="public" id="public1" value="enfant">
+            <input type="radio" name="public" id="public1" value="enfant" <?= ($public == 'enfant') ? 'checked' : '' ?>>
             <label class="mx-1" for="public1">Enfant</label>
 
-            <input type="radio" name="public" id="public2" value="femme">
+            <input type="radio" name="public" id="public2" value="femme" <?= ($public == 'femme') ? 'checked' : '' ?>>
             <label class="mx-1" for="public2">Femme</label>
 
-            <input type="radio" name="public" id="public3" value="homme">
+            <input type="radio" name="public" id="public3" value="homme" <?= ($public == 'homme') ? 'checked' : '' ?>>
             <label class="mx-1" for="public3">Homme</label>
 
-            <input type="radio" name="public" id="public4" value="mixte">
+            <input type="radio" name="public" id="public4" value="mixte" <?= ($public == 'mixte') ? 'checked' : '' ?>>
             <label class="mx-1" for="public4">Mixte</label>
         </div>
     </div>
+
 
     <div class="row mt-5">
         <div class="col-md-4">
@@ -220,14 +282,14 @@ require_once('includeAdmin/header.php');
             <label class="form-label" for="prix">
                 <div class="badge badge-dark text-wrap">Prix</div>
             </label>
-            <input class="form-control" type="text" name="prix" id="prix" placeholder="Prix">
+            <input class="form-control" type="text" name="prix" id="prix" placeholder="Prix" value="<?= $prix ?>">
         </div>
 
         <div class="col-md-4">
             <label class="form-label" for="stock">
                 <div class="badge badge-dark text-wrap">Stock</div>
             </label>
-            <input class="form-control" type="text" name="stock" id="stock" placeholder="Stock">
+            <input class="form-control" type="text" name="stock" id="stock" placeholder="Stock" value="<?= $stock ?>">
         </div>
     </div>
 
@@ -308,7 +370,7 @@ require_once('includeAdmin/header.php');
 
 <!-- modal suppression codepen https://codepen.io/lowpez/pen/rvXbJq -->
 
-<!-- <div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -323,7 +385,7 @@ require_once('includeAdmin/header.php');
             </div>
         </div>
     </div>
-</div> -->
+</div>
 
 <!-- modal -->
 

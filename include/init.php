@@ -9,7 +9,7 @@ session_start();
 
 // constante pour définir le chemin vers mon projet (je récupère automatiqument C:/wamp/www grace à $_SERVER[DOCUMENT_ROOOT] auquel je concatène le dossier de mon projet)
 // ce chemin fonctionnera en local comme en ligne
-define('RACINE_SITE', $_SERVER['DOCUMENT_ROOT'] .'/boutique-ifocop/' );
+define('RACINE_SITE', $_SERVER['DOCUMENT_ROOT'] .'/boutique/' );
 
 // constante URL pour notre projet (a modifier avec le nom de domaine plus tard lorsque le site sera hébergé, mis en ligne)
 define('URL', 'http://localhost/boutique/');
