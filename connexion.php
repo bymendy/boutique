@@ -1,6 +1,13 @@
 <?php
 require_once('include/init.php');
 
+$pageTitle = "Connexion";
+
+if(isset($_GET['action']) && $_GET['action'] == 'deconnexion'){
+    unset($_SESSION['membre']);
+    header('location:' . URL . 'connexion.php');
+    exit();
+}
 if(internauteConnecte()){
     header('location:' . URL . 'profil.php');
     // ce exit est une sécurité supplémentaire par rapport à la redirection

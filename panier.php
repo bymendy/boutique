@@ -1,7 +1,8 @@
 <?php
 require_once('include/init.php');
 
-
+// Onglet qui va avoir un affichage différent selon que l'on y accéde connecté ou non
+$pageTitle = (internauteConnecte()) ? "Panier de ". $_SESSION['membre']['pseudo'] : "Panier";
 
 require_once('include/header.php');
 ?>

@@ -56,6 +56,7 @@ if (isset($_GET['action'])) {
         $photo_bdd ="";
         // condition pour modifier une photo 
         if($_GET['action']== 'update'){
+            // A mettre en relation avec la nouvelle photo que l'on veut insérer en BDD
             $photo_bdd= $_POST['photoActuelle'];
         }
         if(!empty($_FILES['photo']['name'])){
@@ -81,7 +82,7 @@ if (isset($_GET['action'])) {
                 $modifProduit->bindValue(':couleur', $_POST['couleur'], PDO::PARAM_STR);
                 $modifProduit->bindValue(':taille', $_POST['taille'], PDO::PARAM_STR);
                 $modifProduit->bindValue(':public', $_POST['public'], PDO::PARAM_STR);
-                // $modifProduit->bindValue(':photo', $_POST['photo'], PDO::PARAM_STR);
+                $modifProduit->bindValue(':photo', $photo_bdd, PDO::PARAM_STR);
                 $modifProduit->bindValue(':prix', $_POST['prix'], PDO::PARAM_INT);
                 $modifProduit->bindValue(':stock', $_POST['stock'], PDO::PARAM_INT);
                 $modifProduit->execute();
@@ -173,7 +174,7 @@ require_once('includeAdmin/header.php');
 
 <!-- l'attribut enctype de la balise form permet l'envoi d'un fichier en upload, il est obligatoire, sinon on ne pourra envoyer le fichier image correspondant au produit -->
 <form id="monForm" class="my-5" method="POST" action="" enctype="multipart/form-data">
-    <!-- Important d'incorporer l'id_produit et de le cacher avec hidden  -->
+    <!-- Important d'incorporer l'id_produit pour effectuer des modifications et de le cacher avec hidden  -->
     <input type="hidden" name="id_produit" value="<?= $id_produit ?>">
 
     <div class="row mt-5">
@@ -272,11 +273,16 @@ require_once('includeAdmin/header.php');
             <input class="form-control" type="file" name="photo" id="photo" placeholder="Photo">
         </div>
         <!-- ----------------- -->
+        <!-- si la variable $photo a trouvé une information en BDD, on exécute ce qui suit dans les accolades -->        
+        <?php if(!empty($photo)): ?>
         <div class="mt-4">
             <p>Vous pouvez changer d'image
-                <img src="" width="50px">
+                <img src="<?= URL . 'img/' . $photo ?>" width="50px">
             </p>
         </div>
+        <?php endif; ?>
+        <!-- pour modifier la photo existante par une nouvelle (voir ligne 56) -->
+        <input type="hidden" name="photoActuelle" value="<?= $photo ?>">
         <!-- -------------------- -->
         <div class="col-md-4">
             <label class="form-label" for="prix">

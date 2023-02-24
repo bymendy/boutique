@@ -1,6 +1,8 @@
 <?php
 require_once('include/init.php');
 
+$pageTitle = "Formulaire d'inscription ";
+
 // redirection de l'internaute déjà connecté, il n'a rien a faire sur une page incription (on le redirige vers sa page profil grace à header(location))
 if(internauteConnecte()){
     header('location:' . URL . 'profil.php');

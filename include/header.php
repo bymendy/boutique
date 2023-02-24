@@ -1,3 +1,11 @@
+<?php
+
+// requete pour afficher les onglets public (enfant, femme etc... par ordre alphabétique) dans la barre de navigation
+// DISTINCT permet de n'afficher qu'une seule fois l'onglet, sinon, il sera affiché pour autant de produits concernés par ce public
+$afficheMenuPublics = $pdo->query(" SELECT DISTINCT public FROM produit ORDER BY public ASC ");
+
+?>
+
 <!-- $erreur .= '<div class="alert alert-danger" role="alert">Erreur pseudo inconnu !</div>'; -->
 
 <!-- $validate .= '<div class="alert alert-success alert-dismissible fade show mt-5" role="alert">
@@ -22,7 +30,10 @@
          <!-- links pour les icon bootstrap -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.0/font/bootstrap-icons.css">
 
-    <title></title>
+  <!-- code pour récupérer le nom de chaque page de manière dynamique on declare pour chaque fichier, une valeur à pageTitle
+  Dans le cas de la page d'accueil/index, impossible d'avoir une valeur si on a cliqué sur rien, donc on ne peut pas déclarer dans index.php une valeur unique. Cela empecherait d'avoir un onglet dynamiqu si on veut afficher les manteaux, ou les vestes etc...
+  Pour résoudre ce problème, on dit que si pageTitle existe (dans un fichier), on affiche sa valeur, si elle n'existe pas, on affiche La Boutique -->
+    <title><?= (isset($pageTitle) ? $pageTitle : "La Boutique") ?></title>
 </head>
 <body>
 
@@ -42,26 +53,31 @@
         <a class="nav-link" href="<?= URL ?>">La Boutique</a>
       </li>
       <!-- ----------- -->
+      <?php while($menuPublic = $afficheMenuPublics->fetch(PDO::FETCH_ASSOC)): ?>
       <li class="nav-item">
-        <a class="nav-link" href=""><button type="button" class="btn btn-outline-success"></button></a>
+        <!-- ucfirst permet de donner une majuscule a la première lettre d'un mot -->
+        <a class="nav-link" href="<?= URL ?>?public=<?= $menuPublic['public'] ?>"><button type="button" class="btn btn-outline-success"><?= ucfirst($menuPublic['public']) ?></button></a>
       </li>
+      <?php endwhile; ?>
       <!-- ---------- -->
     </ul>
     <ul class="navbar-nav ml-auto">
       <!-- -------------------------- -->
-    
+    <?php if(internauteConnecte()): ?>
+      <!-- si l'internaute est connecté il aura accés aux pages profil, panier et un bouton de deconnexion  (mais pas aux autres) -->
       <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-        <button type="button" class="btn btn-outline-success">Espace <strong></strong></button>
+        <button type="button" class="btn btn-outline-success">Espace <strong><?= $_SESSION['membre']['pseudo'] ?></strong></button>
         </a>
         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-          <a class="dropdown-item" href="<?= URL ?>profil.php">Profil </a>
-          <a class="dropdown-item" href="<?= URL ?>panier.php">Panier </a>
+          <a class="dropdown-item" href="<?= URL ?>profil.php">Profil <?= $_SESSION['membre']['pseudo'] ?></a>
+          <a class="dropdown-item" href="<?= URL ?>panier.php">Panier <?= $_SESSION['membre']['pseudo'] ?></a>
           <a class="dropdown-item" href="<?= URL ?>connexion.php?action=deconnexion">Déconnexion</a>
         </div>
       </li>
-    
+    <?php else: ?>
       <!-- ---------------------------- -->
+      <!-- si il n'est pas connecté, il aura droit aux pages inscription, connexion et panier (mais pas aux autres)-->
       <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle mr-5" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         <button type="button" class="btn btn-outline-success">Espace Membre</button>
@@ -74,13 +90,15 @@
           <a class="dropdown-item" href="<?= URL ?>panier.php"><button class="btn btn-outline-success px-4">Panier</button></a>
         </div>
       </li>
+      <?php endif; ?>
     
      <!-- ------------------------------------ -->
-    
+     <!-- le bouton admin n'apparaitra que pour un utilisateur qui a les droits d'admin -->
+    <?php if(internauteConnecteAdmin()): ?>
       <li class="nav-item mr-5">
           <a class="nav-link" href="admin/index.php"><button type="button" class="btn btn-outline-success">Admin</button></a>
       </li>
-    
+    <?php endif; ?>
       <!-- ------------------------------------ -->
     </ul>
     <form class="form-inline my-2 my-lg-0">
