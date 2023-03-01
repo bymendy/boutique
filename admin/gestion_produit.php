@@ -15,7 +15,33 @@ if (!internauteConnecteAdmin()) {
     header('location:' . URL . 'connexion.php');
     exit();
 }
+// pagination selon produits
 
+// si un indice page existe dans l'url et qu'on retrouve une valeur dedans
+if(isset($_GET['page']) && !empty($_GET['page'])){
+    // alors on déclare une variable $pageCourante $pageCourante ($currentPage) à laquelle on va affecter la valeurvéhiculée par l'indice page dans l'URL
+    // protection de ce qui sera véhiculé dans l'URL avec strip_tags ou htmlspecialchars, plus on force le typage de l'information dans l'URL avec (int) pour indiquer qu'on ne veut pas recevoir autre chose qu'un nombre entier
+    $pageCourante = (int) strip_tags($_GET['page']);
+}else{
+    // dans le cas ou aucune information n'a transité dans l'URL, $pageCourante prendra la valeur de defaut qui est 1
+    $pageCourante = 1;
+}
+// je dois connaitre le nombre de produits en BDD pour établir mon systéme de pagination 
+// je connais déjà cce nombre (voir en haut ) avec un rowCount.
+$queryProduits = $pdo->query("SELECT COUNT(id_produit) AS nombreProduits FROM produit" );
+// le fetch après le query pour récupérer le nombre (pas besoin de fetch_assoc ou autre, je ne vais cibler aucune colonne, je veux récupérer un nombre total)
+$resultatProduits = $queryProduits->fetch();
+$nombreProduits = (int) $resultatProduits['nombreProduits'];
+// echo debug($nombreProduits);
+// je veux que sur chaque page s'affiche 10 produits
+$parPage =  10; 
+// Calcul pour savoir combien de pages devront être générés (nb évolutif, dynamique, le nombre de pages dont j'ai besoin aujourd'hui sera in suffisant dans un an)*
+// utilisation de ceil(), fonction prédéfinie qui arrondie à l'unité superieur si le résultat de la division est un chiffre à virgule
+$nombrePages = ceil($nombreProduits / $parPage);
+//  definir le premier produit qui va s'afficher à chaque nouvelle page (on va le cibler grâce à l'indice qu'il occupe dans le tableau)
+$premierProduit = ($pageCourante - 1) * $parPage;
+
+// fin pagination
 // ************ CONTRAINTE ************
 // 1ére contrainte
 if (isset($_GET['action'])) {
@@ -159,7 +185,7 @@ require_once('includeAdmin/header.php');
 <!-- Utilisation de la fonction personnalisée debug pour savoir ce qui a été récupéré avec $_POST, pour comprendre en cas de probléme, ou est que cela se situe -->
 <!-- <?= debug($_POST) ?> -->
 
-<?php if (isset($_GET['action']) || isset($_GET['page'])) : ?>
+<?php if (isset($_GET['action']) && isset($_GET['page'])) : ?>
 <div class="blockquote alert alert-dismissible fade show mt-5 shadow border border-warning rounded" role="alert">
     <p>Gérez ici votre base de données des produits</p>
     <p>Vous pouvez modifier leurs données, ajouter ou supprimer un produit</p>
@@ -318,7 +344,8 @@ require_once('includeAdmin/header.php');
 </div>
 
 <table class="table table-dark text-center">
-    <?php $afficheProduits = $pdo->query("SELECT * FROM produit ORDER BY prix ASC ") ?>
+    <!-- Complété pour n'afficher que 10 prduits dans le tableau le OFFST détermine quel produit affichée dans la nouvelle page -->
+    <?php $afficheProduits = $pdo->query("SELECT * FROM produit ORDER BY prix ASC LIMIT $parPage OFFSET $premierProduit") ?>
     <thead>
         <tr>
             <?php for ($i = 0; $i < $afficheProduits->columnCount(); $i++) :
@@ -347,22 +374,27 @@ require_once('includeAdmin/header.php');
         <?php endwhile; ?>
     </tbody>
 </table>
-
+<!-- Debut de pagignation -->
 <nav>
     <ul class="pagination justify-content-end">
-        <li class="page-item ">
-            <a class="page-link text-dark" href="" aria-label="Previous">
+        <!-- dans le cas ou nous sommes sur la page 1, il ne faudra pas pouvoir cliquer sur l'onglet précédent, sinon on sera expédiée à la page 0 !  Il faut donc dans ce cas (voir ternaire) si on est sur la page 1 , -->
+        <li class="page-item <?= ($pageCourante == 1 ) ? 'disabled' : "" ?>">
+        <!-- si on clique sur la fleche précédente, c'est pour aller à la page précédent, dans ce cas, on soustrait à page Courante, la valeur de 1 (si pageCourante = 4, on retournera à la page 3) -->
+            <a class="page-link text-dark" href="?page=<?= $pageCourante -1?>" aria-label="Previous">
                 <span aria-hidden="true">précédente</span>
                 <span class="sr-only">Previous</span>
             </a>
         </li>
-
-        <li class="mx-1 page-item">
-            <a class="btn btn-outline-dark " href=""></a>
+        <!-- AFFICHE LE NOMBRE DE PAGES pour cliquer celle que l'on veut -->
+        <?php for($page = 1; $page <= $nombrePages; $page++): ?>
+        <li class="mx-1 page-item ">
+            <a class="btn btn-outline-dark <?= ($pageCourante == $page) ?'active' : "" ?>" href="?page=<?= $page ?>"><?= $page ?></a>
         </li>
+        <?php endfor; ?>
 
-        <li class="page-item ">
-            <a class="page-link text-dark" href="" aria-label="Next">
+        <!-- FIN NOMBRE DE PAGES -->
+        <li class="page-item <?= ($pageCourante == $nombrePages)? 'disabled' : '' ?>">
+            <a class="page-link text-dark" href="?page=<?= $pageCourante +1?>" aria-label="Next">
                 <span aria-hidden="true">suivante</span>
                 <span class="sr-only">Next</span>
             </a>

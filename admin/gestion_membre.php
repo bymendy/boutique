@@ -5,6 +5,33 @@ if (!internauteConnecteAdmin()) {
     header('location:' . URL . 'connexion.php');
     exit();
 }
+// pagination selon Membres
+
+// si un indice page existe dans l'url et qu'on retrouve une valeur dedans
+if(isset($_GET['page']) && !empty($_GET['page'])){
+    // alors on déclare une variable $pageCourante $pageCourante ($currentPage) à laquelle on va affecter la valeurvéhiculée par l'indice page dans l'URL
+    // protection de ce qui sera véhiculé dans l'URL avec strip_tags ou htmlspecialchars, plus on force le typage de l'information dans l'URL avec (int) pour indiquer qu'on ne veut pas recevoir autre chose qu'un nombre entier
+    $pageCourante = (int) strip_tags($_GET['page']);
+}else{
+    // dans le cas ou aucune information n'a transité dans l'URL, $pageCourante prendra la valeur de defaut qui est 1
+    $pageCourante = 1;
+}
+// je dois connaitre le nombre de Membres en BDD pour établir mon systéme de pagination 
+// je connais déjà cce nombre (voir en haut ) avec un rowCount.
+$queryMembres = $pdo->query("SELECT COUNT(id_membre) AS nombreMembres FROM membre" );
+// le fetch après le query pour récupérer le nombre (pas besoin de fetch_assoc ou autre, je ne vais cibler aucune colonne, je veux récupérer un nombre total)
+$resultatMembres = $queryMembres->fetch();
+$nombreMembres = (int) $resultatMembres['nombreMembres'];
+// echo debug($nombreMembres);
+// je veux que sur chaque page s'affiche 5 Membres
+$parPage =  5; 
+// Calcul pour savoir combien de pages devront être générés (nb évolutif, dynamique, le nombre de pages dont j'ai besoin aujourd'hui sera in suffisant dans un an)*
+// utilisation de ceil(), fonction prédéfinie qui arrondie à l'unité superieur si le résultat de la division est un chiffre à virgule
+$nombrePages = ceil($nombreMembres / $parPage);
+//  definir le premier produit qui va s'afficher à chaque nouvelle page (on va le cibler grâce à l'indice qu'il occupe dans le tableau)
+$premierMembre = ($pageCourante - 1) * $parPage;
+// fin pagination
+
 
 // au préalable, pour introduire le formulaire, je vérifie que j'ai reçu dans l'URL un indice action. Ca permettra de ne pas répéter plusieurs fois cette vérification dans tout le traitement du formulaire qui va suivre
 if (isset($_GET['action'])) {
@@ -249,7 +276,8 @@ require_once('includeAdmin/header.php');
 </div>
 
 <table class="table table-dark text-center">
-    <?php $afficheUsers = $pdo->query("SELECT * FROM membre ORDER BY pseudo ASC "); ?>
+     <!-- Complété pour n'afficher que 5 membres dans le tableau le OFFST détermine quel produit affichée dans la nouvelle page -->   
+    <?php $afficheUsers = $pdo->query("SELECT * FROM membre ORDER BY pseudo ASC LIMIT $parPage OFFSET $premierMembre"); ?>
     <thead>
         <tr>
             <?php for ($i = 0; $i < $afficheUsers->columnCount(); $i++) :
@@ -277,20 +305,25 @@ require_once('includeAdmin/header.php');
 </table>
 
 <nav>
-    <ul class="pagination justify-content-end">
-        <li class="page-item ">
-            <a class="page-link text-dark" href="" aria-label="Previous">
+<ul class="pagination justify-content-end">
+        <!-- dans le cas ou nous sommes sur la page 1, il ne faudra pas pouvoir cliquer sur l'onglet précédent, sinon on sera expédiée à la page 0 !  Il faut donc dans ce cas (voir ternaire) si on est sur la page 1 , -->
+        <li class="page-item <?= ($pageCourante == 1 ) ? 'disabled' : "" ?>">
+        <!-- si on clique sur la fleche précédente, c'est pour aller à la page précédent, dans ce cas, on soustrait à page Courante, la valeur de 1 (si pageCourante = 4, on retournera à la page 3) -->
+            <a class="page-link text-dark" href="?page=<?= $pageCourante -1?>" aria-label="Previous">
                 <span aria-hidden="true">précédente</span>
                 <span class="sr-only">Previous</span>
             </a>
         </li>
-
-        <li class="mx-1 page-item">
-            <a class="btn btn-outline-dark " href=""></a>
+        <!-- AFFICHE LE NOMBRE DE PAGES pour cliquer celle que l'on veut -->
+        <?php for($page = 1; $page <= $nombrePages; $page++): ?>
+        <li class="mx-1 page-item <?= ($pageCourante == $page) ?'active' : "" ?>">
+            <a class="btn btn-outline-dark " href="?page=<?= $page ?>"><?= $page ?></a>
         </li>
+        <?php endfor; ?>
 
-        <li class="page-item ">
-            <a class="page-link text-dark" href="" aria-label="Next">
+        <!-- FIN NOMBRE DE PAGES -->
+        <li class="page-item <?= ($pageCourante == $nombrePages)? 'disabled' : '' ?>">
+            <a class="page-link text-dark" href="?page=<?= $pageCourante +1?>" aria-label="Next">
                 <span aria-hidden="true">suivante</span>
                 <span class="sr-only">Next</span>
             </a>
