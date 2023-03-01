@@ -340,6 +340,7 @@ require_once('includeAdmin/header.php');
                         <td><?= $value ?></td>
                     <?php endif; ?>
                 <?php endforeach; ?>
+                <!-- Crayon pour modifier (UPDATE) et pobelle pour supprimer (DELETE) -->
                 <td><a href='?action=update&id_produit=<?= $produit['id_produit'] ?>'><i class="bi bi-pen-fill text-warning"></i></a></td>
                 <td><a data-href="?action=delete&id_produit=<?= $produit['id_produit'] ?>" data-toggle="modal" data-target="#confirm-delete"><i class="bi bi-trash-fill text-danger" style="font-size: 1.5rem;"></i></a></td>
             </tr>

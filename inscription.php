@@ -80,7 +80,7 @@ if($_POST){
         $inscrireUser->bindValue(':adresse', $_POST['adresse'], PDO::PARAM_STR);
         $inscrireUser->execute();
 
-        header('location' . URL . 'connexion.php?action=validate')
+        header('location' . URL . 'connexion.php?action=validate');
     }
 
 

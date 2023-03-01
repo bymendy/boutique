@@ -42,14 +42,15 @@ require_once('include/header.php');
 
                 <?php while($produit = $afficheProduits->fetch(PDO::FETCH_ASSOC)): ?>
                 <div class="card mx-3 shadow p-3 mb-5 bg-white rounded" style="width: 18rem;">
-                    <a href=""><img src="<?= URL . 'img/' . $produit['photo'] ?>" class="card-img-top" alt="Photo de <?= $produit['titre'] ?>"></a>
+                    <a href="fiche_produit.php?id_produit=<?= $produit['id_produit']?>"><img src="<?= URL . 'img/' . $produit['photo'] ?>" class="card-img-top" alt="Photo de <?= $produit['titre'] ?>"></a>
                     <div class="card-body">
                         <h3 class="card-title"><?= $produit['titre'] ?></h3>
                         <h3 class="card-title">
                             <div class="badge badge-dark text-wrap"><?= $produit['prix'] ?> €</div>
                         </h3>
                         <p class="card-text"><?= $produit['description'] ?></p>
-                        <a href="" class="btn btn-outline-success"><i class='bi bi-search'></i> Voir Produit</a>
+                        <!-- Requete pour véhiculer l'id de chaque produit et pouvoir l'afficher et basculer sur la page fiche produit  -->
+                        <a href="fiche_produit.php?id_produit=<?= $produit['id_produit']?>" class="btn btn-outline-success"><i class='bi bi-search'></i> Voir Produit</a>
                     </div>
                 </div>
                 <?php endwhile; ?>
@@ -101,14 +102,14 @@ require_once('include/header.php');
             <!-- boucle while qui récupérer tous les vetements s'adressant à un même public ( arelier la requete codées dans affichage.php) -->
             <?php while($produit = $afficheProduits->fetch(PDO::FETCH_ASSOC)): ?>
                 <div class="card mx-3 shadow p-3 mb-5 bg-white rounded" style="width: 18rem;">
-                    <a href=""><img src="<?= URL . 'img/' . $produit['photo'] ?>" class="card-img-top" alt="Photo de <?= $produit['titre'] ?>"></a>
+                    <a href="fiche_produit.php?id_produit=<?= $produit['id_produit']?>"><img src="<?= URL . 'img/' . $produit['photo'] ?>" class="card-img-top" alt="Photo de <?= $produit['titre'] ?>"></a>
                     <div class="card-body">
                         <h3 class="card-title"><?= $produit['titre'] ?></h3>
                         <h3 class="card-title">
                             <div class="badge badge-dark text-wrap"><?= $produit['prix'] ?> €</div>
                         </h3>
                         <p class="card-text"><?= $produit['description'] ?></p>
-                        <a href="" class="btn btn-outline-success"><i class='bi bi-search'></i> Voir Produit</a>
+                        <a href="fiche_produit.php?id_produit=<?= $produit['id_produit']?>" class="btn btn-outline-success"><i class='bi bi-search'></i> Voir Produit</a>
                     </div>
                 </div>
             <?php endwhile; ?>

@@ -52,7 +52,16 @@ if(isset($_GET['public'])){
 // Tout ce qui concerne la fiche produit
 
 // affichage d'un produit
-
+if(isset($_GET['id_produit'])){
+    $detailProduit =$pdo->query("SELECT * FROM produit WHERE id_produit= '$_GET[id_produit]'");
+    // pour se protéger de qlq'un qui tenterait de modifier l'id-produit dans l'URL...si la valeur n'existe pas en BDD, on le redirige vers notre index (URL). Le <= 0 est fait dans le cas ou il injecte une valeur négative
+    if($detailProduit->rowCount() <=0){
+        header('location:' . URL);
+        exit;
+    }
+    // si on n'est pas rentré dans la condition, si le produit existe, on fait le fetch, et le résultat de la requete sera affecté dans la variable/tableau $detail
+    $detail= $detailProduit->fetch(PDO::FETCH_ASSOC);
+}
 // fin affichage d'un seul produit
 
 
